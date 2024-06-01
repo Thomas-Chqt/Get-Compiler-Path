@@ -117,7 +117,7 @@ runs:
             if ($env:COMPILER -eq "clang")
             {
               $c_path   = Get-Command clang-$env:VERSION | Select-Object -ExpandProperty Source
-              $cpp_path = Get-Command clang-$env:VERSION | Select-Object -ExpandProperty Source
+              $cpp_path = Get-Command clang++-$env:VERSION | Select-Object -ExpandProperty Source
             }
             if ($env:COMPILER -eq "gcc")
             {
