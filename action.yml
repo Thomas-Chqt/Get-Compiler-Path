@@ -1,0 +1,142 @@
+name: 'Get compiler path'
+description: 'Get the path of a given compiler'
+inputs:
+  compiler:
+    description: 'The name and version of the compiler (ex: gcc-11 or clang)'
+    required: true
+
+outputs:
+  c-path:
+    description: 'The path to the C compiler'
+    value: ${{ steps.export-path.outputs.c-path }}
+  cpp-path:
+    description: 'The path to the C++ compiler'
+    value: ${{ steps.export-path.outputs.cpp-path }}
+
+runs:
+  using: "composite"
+  steps:
+    - name: Split input
+      shell: bash
+      run: |
+        ARRAY=($(echo ${{ inputs.compiler }} | tr '-' ' '))
+        echo "COMPILER=${ARRAY[0]}" >> $GITHUB_ENV
+        echo "VERSION=${ARRAY[1]}" >> $GITHUB_ENV
+
+    - name: Check input
+      shell: bash
+      run: |
+        if [[ "$COMPILER" != "clang" ]] && [[ "$COMPILER" != "gcc" ]]; then
+          echo "Bad COMPILER name"
+          exit 1
+        fi
+
+    - name: Find compiler (macOS)
+      if: runner.os == 'macOS'
+      shell: bash
+      run: |
+        if [[ "$VERSION" == "" ]]; then
+          if [[ "$COMPILER" == "clang" ]]; then
+            echo   "C_PATH=$(which clang)"   >> $GITHUB_ENV
+            echo "CPP_PATH=$(which clang++)" >> $GITHUB_ENV
+          elif [[ "$COMPILER" == "gcc" ]]; then
+            echo   "C_PATH=$(which gcc)" >> $GITHUB_ENV
+            echo "CPP_PATH=$(which g++)" >> $GITHUB_ENV
+          fi
+          exit 0
+        
+        elif [[ "$COMPILER" == "clang" ]]; then
+          if which $(brew --prefix llvm@$VERSION)/bin/clang-$VERSION &> /dev/null; then
+            echo   "C_PATH=$(brew --prefix llvm@$VERSION)/bin/clang-$VERSION" >> $GITHUB_ENV
+            echo "CPP_PATH=$(brew --prefix llvm@$VERSION)/bin/clang-$VERSION" >> $GITHUB_ENV
+            exit 0
+          fi
+
+        elif [[ "$COMPILER" == "gcc" ]]; then
+          if which $(brew --prefix gcc@$VERSION)/bin/gcc-$VERSION &> /dev/null; then
+            echo   "C_PATH=$(brew --prefix gcc@$VERSION)/bin/gcc-$VERSION" >> $GITHUB_ENV
+            echo "CPP_PATH=$(brew --prefix gcc@$VERSION)/bin/g++-$VERSION" >> $GITHUB_ENV
+            exit 0
+          fi
+        fi
+        
+        echo "$COMPILER-$VERSION is not installed."
+        exit 1
+
+    - name: Find compiler (Linux)
+      if: runner.os == 'Linux'
+      shell: bash
+      run: |
+        if [[ "$VERSION" == "" ]]; then
+          if [[ "$COMPILER" == "clang" ]]; then
+            echo   "C_PATH=$(which clang-)"   >> $GITHUB_ENV
+            echo "CPP_PATH=$(which clang++)" >> $GITHUB_ENV
+          elif [[ "$COMPILER" == "gcc" ]]; then
+            echo   "C_PATH=$(which gcc)" >> $GITHUB_ENV
+            echo "CPP_PATH=$(which g++)" >> $GITHUB_ENV
+          fi
+          exit 0
+
+        else
+          if which $COMPILER-$VERSION &> /dev/null; then
+            if [[ "$COMPILER" == "clang" ]]; then
+              echo   "C_PATH=$(which clang-$VERSION)" >> $GITHUB_ENV
+              echo "CPP_PATH=$(which clang-$VERSION)" >> $GITHUB_ENV
+            elif [[ "$COMPILER" == "gcc" ]]; then
+              echo   "C_PATH=$(which gcc-$VERSION)" >> $GITHUB_ENV
+              echo "CPP_PATH=$(which g++-$VERSION)" >> $GITHUB_ENV
+            fi
+            exit 0
+          fi
+        fi
+        
+        echo "$COMPILER version $VERSION is not installed."
+        exit 1
+        
+    - name: Find compiler (Windows)
+      if: runner.os == 'Windows'
+      shell: pwsh
+      run: |
+        try
+        {
+          if ($env:VERSION -eq "")
+          {
+            if ($env:COMPILER -eq "clang")
+            {
+              $c_path   = Get-Command clang   | Select-Object -ExpandProperty Source
+              $cpp_path = Get-Command clang++ | Select-Object -ExpandProperty Source
+            }
+            if ($env:COMPILER -eq "gcc")
+            {
+              $c_path   = Get-Command gcc | Select-Object -ExpandProperty Source
+              $cpp_path = Get-Command g++ | Select-Object -ExpandProperty Source
+            }
+          }
+          else
+          {
+            if ($env:COMPILER -eq "clang")
+            {
+              $c_path   = Get-Command clang-$env:VERSION | Select-Object -ExpandProperty Source
+              $cpp_path = Get-Command clang-$env:VERSION | Select-Object -ExpandProperty Source
+            }
+            if ($env:COMPILER -eq "gcc")
+            {
+              $c_path   = Get-Command gcc--$env:VERSION | Select-Object -ExpandProperty Source
+              $cpp_path = Get-Command g++--$env:VERSION | Select-Object -ExpandProperty Source
+            }
+          }
+          echo   "C_PATH=$c_path"   >> $env:GITHUB_ENV
+          echo "CPP_PATH=$cpp_path" >> $env:GITHUB_ENV
+        }
+        Catch
+        {
+          "$env:COMPILER version $env:VERSION is not installed."
+          exit 1
+        }
+
+    - name: Export path
+      id: export-path
+      shell: bash
+      run: |
+        echo   c-path="${{ env.C_PATH }}"   >> $GITHUB_OUTPUT
+        echo cpp-path="${{ env.CPP_PATH }}" >> $GITHUB_OUTPUT
