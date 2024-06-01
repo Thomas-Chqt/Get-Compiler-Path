@@ -47,8 +47,8 @@ runs:
         
         elif [[ "$COMPILER" == "clang" ]]; then
           if which $(brew --prefix llvm@$VERSION)/bin/clang-$VERSION &> /dev/null; then
-            echo   "C_PATH=$(brew --prefix llvm@$VERSION)/bin/clang-$VERSION" >> $GITHUB_ENV
-            echo "CPP_PATH=$(brew --prefix llvm@$VERSION)/bin/clang-$VERSION" >> $GITHUB_ENV
+            echo   "C_PATH=$(brew --prefix llvm@$VERSION)/bin/clang"   >> $GITHUB_ENV
+            echo "CPP_PATH=$(brew --prefix llvm@$VERSION)/bin/clang++" >> $GITHUB_ENV
             exit 0
           fi
 
@@ -69,7 +69,7 @@ runs:
       run: |
         if [[ "$VERSION" == "" ]]; then
           if [[ "$COMPILER" == "clang" ]]; then
-            echo   "C_PATH=$(which clang-)"   >> $GITHUB_ENV
+            echo   "C_PATH=$(which clang)"   >> $GITHUB_ENV
             echo "CPP_PATH=$(which clang++)" >> $GITHUB_ENV
           elif [[ "$COMPILER" == "gcc" ]]; then
             echo   "C_PATH=$(which gcc)" >> $GITHUB_ENV
