@@ -81,7 +81,7 @@ runs:
           if which $COMPILER-$VERSION &> /dev/null; then
             if [[ "$COMPILER" == "clang" ]]; then
               echo   "C_PATH=$(which clang-$VERSION)" >> $GITHUB_ENV
-              echo "CPP_PATH=$(which clang-$VERSION)" >> $GITHUB_ENV
+              echo "CPP_PATH=$(which clang++-$VERSION)" >> $GITHUB_ENV
             elif [[ "$COMPILER" == "gcc" ]]; then
               echo   "C_PATH=$(which gcc-$VERSION)" >> $GITHUB_ENV
               echo "CPP_PATH=$(which g++-$VERSION)" >> $GITHUB_ENV
