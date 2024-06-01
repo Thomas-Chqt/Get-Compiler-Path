@@ -54,8 +54,8 @@ runs:
 
         elif [[ "$COMPILER" == "gcc" ]]; then
           if which $(brew --prefix gcc@$VERSION)/bin/gcc-$VERSION &> /dev/null; then
-            echo   "C_PATH=$(brew --prefix gcc@$VERSION)/bin/gcc-$VERSION" >> $GITHUB_ENV
-            echo "CPP_PATH=$(brew --prefix gcc@$VERSION)/bin/g++-$VERSION" >> $GITHUB_ENV
+              echo   "C_PATH=$(which gcc-$VERSION)" >> $GITHUB_ENV
+              echo "CPP_PATH=$(which g++-$VERSION)" >> $GITHUB_ENV
             exit 0
           fi
         fi
